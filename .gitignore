@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+dyslexia-backend/venv/
+
+# Node
+node_modules/
+dist/
+
+# Local data and artifacts
+backend/data/
+dyslexia-backend/data/
+artifacts/
+debug_outputs/
+*.db
+
+# Secrets
+.env
+*.env
+!*.env.example
+
+# Notebook noise
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log

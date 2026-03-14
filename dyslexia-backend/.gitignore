@@ -1,0 +1,8 @@
+.env
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+auth_proof_report.json
+auth_proof_test.db
+FINAL_OCR_REGRESSION_REPORT.json

@@ -126,18 +126,15 @@ Check `metadata.run_summary` and `metadata.run_summary.tier_summary` in the resp
 ## 6. Export for Analysis
 
 ```python
-from app.pipeline.service import DyslexAIPipelineService
-from app.core.config import get_settings
+from app.pipeline.notebook_pipeline import NotebookPipeline
 
-settings = get_settings()
-pipeline = DyslexAIPipelineService(settings)
+pipeline = NotebookPipeline()
 result = pipeline.process_image("path/to/image.png")
 
-# Export full result
-pipeline.export_result_json(result, "result.json")
-
-# Inspect run_summary
-print(result.metadata.get("run_summary", {}))
+# Inspect metadata (ocr_mode, gate_rejected_*, etc.)
+print(result.metadata)
+print("raw:", result.raw_text)
+print("corrected:", result.corrected_text)
 ```
 
 ## 7. Debug Logs (when DYSLEXAI_DEBUG=1)

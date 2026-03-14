@@ -35,8 +35,8 @@ git commit -m "Initial commit: DyslexAI OCR and adaptive exercises"
 # Create main branch
 git branch -M main
 
-# Add your GitHub repo (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/dyslexai.git
+# Add your GitHub repo (replace with your username if different)
+git remote add origin https://github.com/abubakarshahid16/dyslexai-.git
 
 # Push
 git push -u origin main
@@ -82,8 +82,7 @@ To host the frontend publicly:
 
 ```
 dyslexai/
-├── backend/           # DyslexAI OCR API
-├── dyslexia-backend/  # Exercise backend (no .env, no venv)
+├── dyslexia-backend/  # Single backend: OCR + auth + exercises (no .env, no venv)
 ├── frontend/          # React app (no node_modules)
 ├── scripts/
 ├── screenshots/

@@ -10,10 +10,10 @@ Why:
 - A single OCR model can be fast or strong, but often not both on CPU.
 - Hybrid routing lets the system stay efficient while still handling hard lines.
 
-What DyslexAI does:
-- Uses PaddleOCR as a CPU-friendly primary pass.
-- Routes only suspicious lines to TrOCR fallback.
-- Uses conservative fusion rather than blindly trusting the fallback every time.
+What DyslexAI does (notebook_parity pipeline):
+- Uses DocTR for line detection and TrOCR for recognition.
+- Layer 1 (sanitize) → Layer 2 (ByT5) → Layer 3 (Groq optional).
+- Acceptance gate rejects corrections that worsen similarity.
 
 ## 2. Adaptive Preprocessing Instead Of Always-On Aggressive Cleanup
 

@@ -56,7 +56,7 @@ git branch -M main
 Replace `YOUR_USERNAME` with your GitHub username:
 
 ```powershell
-git remote add origin https://github.com/YOUR_USERNAME/dyslexai.git
+git remote add origin https://github.com/abubakarshahid16/dyslexai-.git
 git push -u origin main
 ```
 
@@ -64,7 +64,7 @@ git push -u origin main
 
 ## After Pushing
 
-1. **Update README clone URL** (optional): Replace `YOUR_USERNAME` in README.md with your actual username.
+1. **Clone URL** in README is already set to `abubakarshahid16/dyslexai-`.
 2. **Add description** on GitHub: Settings → General → Description
 3. **Add topics**: `ocr`, `dyslexia`, `education`, `fastapi`, `react`
 

@@ -192,7 +192,7 @@
 - None; all data from backend
 
 ### Placeholders
-- UploadPanel: "PaddleOCR only" in fast_local hint (backend uses DocTR+TrOCR)
+- UploadPanel: fast_local uses DocTR + TrOCR-base (fixed in cleanup)
 
 ---
 

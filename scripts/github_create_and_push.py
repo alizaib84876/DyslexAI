@@ -25,7 +25,7 @@ REPO_NAME = "dyslexai"
 SKIP = {
     ".git", "venv", "node_modules", "__pycache__", ".pytest_cache",
     "dist", ".ipynb_checkpoints", "*.pyc", "*.db", "artifacts", "debug_outputs",
-    "dyslexia-backend/venv", "backend/data", "dyslexia-backend/data",
+    "dyslexia-backend/venv", "dyslexia-backend/data",
     "batch_test_results.json", "tools/node-v24.11.0-win-x64.zip",
     "tools/PortableGit.exe", "tools/PortableGit", "tools/PortableGit",
 }

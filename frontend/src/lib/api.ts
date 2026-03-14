@@ -98,12 +98,15 @@ export function toAssetUrl(
     return null;
   }
   const normalized = filePath.replace(/\\/g, "/");
-  let idx = normalized.lastIndexOf("/backend/data/");
-  if (idx !== -1) {
-    const relative = normalized.slice(idx + "/backend/data".length);
-    return `${SERVER_ROOT}/data${relative}`;
+  // Handle paths from dyslexia-backend/data/ or legacy backend/data/
+  for (const prefix of ["/dyslexia-backend/data/", "/backend/data/"]) {
+    const idx = normalized.lastIndexOf(prefix);
+    if (idx !== -1) {
+      const relative = normalized.slice(idx + prefix.length);
+      return `${SERVER_ROOT}/data/${relative}`;
+    }
   }
-  idx = normalized.lastIndexOf("/data/");
+  let idx = normalized.lastIndexOf("/data/");
   if (idx !== -1) {
     const relative = normalized.slice(idx);
     return `${SERVER_ROOT}${relative}`;

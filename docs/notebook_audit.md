@@ -45,7 +45,7 @@ project evolved from a direct OCR demo into a more serious hybrid pipeline.
 ### Problems and weaknesses
 
 - The notebook contains duplicate implementations of the modular pipeline.
-- The older PaddleOCR integration is version fragile and fails on newer releases
+- The older PaddleOCR integration (in notebook history) is version fragile and fails on newer releases
   because it passes deprecated or removed keyword arguments such as `use_gpu`.
 - The early pipeline embeds a Groq API key directly in source code, which is not safe
   for a production or research repository.
@@ -85,17 +85,14 @@ project evolved from a direct OCR demo into a more serious hybrid pipeline.
 
 ## Production Refactor Mapping
 
-Notebook concept -> Production module
+Notebook concept -> Production module (active)
 
 - `ImageTriage` -> `dyslexia-backend/app/ocr/triage.py`
-- `Preprocessor` -> `dyslexia-backend/app/ocr/preprocess.py`
-- `PaddleEngine` -> `dyslexia-backend/app/ocr/engines/paddle_engine.py`
-- `TrOCREngine` -> `dyslexia-backend/app/ocr/engines/trocr_engine.py`
-- `Router` -> `dyslexia-backend/app/ocr/router.py`
-- `FusionEngine` -> `dyslexia-backend/app/ocr/fusion.py`
-- `ByT5Corrector` -> `dyslexia-backend/app/correction/byt5_corrector.py`
+- DocTR + TrOCR (early pipeline) -> `dyslexia-backend/app/ocr/engines/notebook_engine.py` (`NotebookOCREngine`)
+- Full pipeline (OCR + layers) -> `dyslexia-backend/app/pipeline/notebook_pipeline.py` (`NotebookPipeline`)
+- `ByT5Corrector` -> `dyslexia-backend/app/correction/byt5_corrector.py` (via `notebook_layers.py`)
 - `levenshtein_ops()` -> `dyslexia-backend/app/utils/diffing.py`
-- `DyslexiaOCRApp.process_image()` -> `dyslexia-backend/app/pipeline/service.py`
+- OCR API entry -> `dyslexia-backend/app/routers/ocr.py` (calls `NotebookPipeline`)
 
 ## Security Note
 

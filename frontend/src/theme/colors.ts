@@ -1,6 +1,6 @@
 /**
  * DyslexAI theme – light mode, primary #308ce8
- * Matches WEB_APP_DESIGN_SPEC.md and mobile app
+ * Matches WEB_APP_DESIGN_SPEC.md and web app design
  */
 export const colors = {
   // Primary

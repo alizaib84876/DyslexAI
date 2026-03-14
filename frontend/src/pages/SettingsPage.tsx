@@ -14,7 +14,7 @@ export function SettingsPage() {
       <section className="card">
         <div className="card-header">
           <h3>Menu</h3>
-          <p>Same typography and spacing as the mobile app.</p>
+          <p>Same typography and spacing across the web app.</p>
         </div>
         <nav className="settings-menu">
           <Link to="/about" className="settings-item">About</Link>

@@ -28,6 +28,6 @@ Replace `ghp_xxx` with your actual token.
 
 ## Result
 
-- Creates `https://github.com/YOUR_USERNAME/dyslexai`
+- Creates/updates `https://github.com/abubakarshahid16/dyslexai-`
 - Uploads all project files (excluding .env, venv, node_modules)
 - No Git installation needed

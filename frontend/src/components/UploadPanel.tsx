@@ -63,7 +63,7 @@ export function UploadPanel({ students, onSubmit, busy }: Props) {
           <span>Processing Mode</span>
           <select value={qualityMode} onChange={(event) => setQualityMode(event.target.value)}>
             <option value="quality_local">Quality (local) — best for handwriting (TrOCR)</option>
-            <option value="fast_local">Fast — quickest, PaddleOCR only</option>
+            <option value="fast_local">Fast — quickest, DocTR + TrOCR-base</option>
             <option value="cloud_refine">Cloud refine — quality + optional cloud (future)</option>
           </select>
           <p className="field-hint" style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>

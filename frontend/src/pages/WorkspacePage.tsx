@@ -59,7 +59,7 @@ export function WorkspacePage() {
           "OCR endpoint not found. Run the app with .\\scripts\\run.ps1 (full) or .\\scripts\\run-simple.ps1 (simple) so the backend is ready.";
       } else if (msg.includes("extra dependencies") || msg.includes("503")) {
         displayMsg =
-          "OCR needs setup. In dyslexia-backend folder run: pip install torch transformers opencv-python paddleocr";
+          "OCR needs setup. In dyslexia-backend folder run: pip install torch transformers opencv-python python-doctr";
       }
       setError(displayMsg);
       setStatus(null);

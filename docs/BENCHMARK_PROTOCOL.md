@@ -108,15 +108,13 @@ For each sample, record:
 ## Quick Run Script
 
 ```python
-from app.core.config import get_settings
-from app.pipeline.service import DyslexAIPipelineService
+from app.pipeline.notebook_pipeline import NotebookPipeline
 
-settings = get_settings()
-# Override for Setting B
-settings.routing.difficulty_easy_threshold = 0.4
-settings.routing.difficulty_hard_threshold = 1.5
-
-pipeline = DyslexAIPipelineService(settings)
+pipeline = NotebookPipeline()
 result = pipeline.process_image("path/to/sample.png")
-print(result.metadata.get("run_summary", {}))
+print(result.metadata)
+print("raw:", result.raw_text[:200])
+print("corrected:", result.corrected_text[:200])
 ```
+
+For tier thresholds (Setting B/C), set env before import: `DYSLEXAI_EASY_THRESHOLD=0.4`, `DYSLEXAI_HARD_THRESHOLD=1.5`.

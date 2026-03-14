@@ -1,6 +1,5 @@
-# Simple mode: Exercises backend only (port 8000)
-# Use when Docker/PostgreSQL not running or for quick exercises testing.
-# Dashboard, Workspace, History will show errors - Exercises and Game Mode work.
+# Simple mode: Full stack with SQLite (no Docker required)
+# Use when Docker/PostgreSQL is unavailable. Backend + frontend, all features work.
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot

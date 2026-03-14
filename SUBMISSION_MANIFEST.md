@@ -50,7 +50,7 @@ See [DEMO_FLOW.md](DEMO_FLOW.md) for full walkthrough.
 | File | Purpose |
 |------|---------|
 | [FINAL_DEMO_PROOF.md](FINAL_DEMO_PROOF.md) | End-to-end demo verification |
-| [FINAL_ARCHITECTURE.md](FINAL_ARCHITECTURE.md) | Architecture overview |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture overview |
 | [FINAL_EVALUATION.md](FINAL_EVALUATION.md) | OCR regression 6/6, auth 18/18 |
 | [RELEASE_READINESS_REPORT.md](RELEASE_READINESS_REPORT.md) | Release checklist |
 | `dyslexia-backend/FINAL_OCR_REGRESSION_REPORT.md` | Golden sample regression results |

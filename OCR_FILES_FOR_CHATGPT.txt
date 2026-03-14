@@ -1,10 +1,16 @@
 ================================================================================
-OCR PIPELINE FILES - COPY ALL BELOW TO CHATGPT
+OCR PIPELINE FILES - DEPRECATED
 ================================================================================
-Problem: OCR gives wrong output (e.g. "they created 1961 62 0 0 I close to hear from you soon tax" instead of "Hope to hear from you soon! XX"). Please analyze and suggest changes to fix it.
+NOTE: The paths and code below reference the OLD backend/ architecture which no
+longer exists. The ACTIVE pipeline is:
+  - dyslexia-backend/app/pipeline/notebook_pipeline.py (NotebookPipeline)
+  - dyslexia-backend/app/ocr/engines/notebook_engine.py (DocTR + TrOCR)
+  - dyslexia-backend/app/correction/notebook_layers.py
+See OCR_PIPELINE_REFERENCE.md for the current architecture.
+================================================================================
 
 ================================================================================
-FILE 1: backend/app/ocr/engines/paddle_engine.py
+FILE 1: backend/app/ocr/engines/paddle_engine.py (LEGACY - NOT IN REPO)
 ================================================================================
 
 """Version-safe PaddleOCR wrapper."""

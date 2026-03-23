@@ -156,5 +156,4 @@ Play flow:
 ## Notes
 - The first OCR / handwriting run can take a while because models download and load.
 - LLM features require `GROQ_API_KEY`.
-- Remove your `.env` files before publishing.
 

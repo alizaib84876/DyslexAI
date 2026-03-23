@@ -1,2 +1,0 @@
-{"sample_id":"line_001","image_path":"../../tests/fixtures/line_001.png","text":"The student likes reading.","split":"train"}
-{"sample_id":"paragraph_001","image_path":"../../tests/fixtures/page_001.jpg","line_texts":["The student likes reading.","They practise writing every day."],"split":"validation"}

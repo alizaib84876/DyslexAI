@@ -9,6 +9,8 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: string;
+  student_id?: string | null;
   created_at: string;
 }
 

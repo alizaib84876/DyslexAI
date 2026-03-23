@@ -1,3 +1,5 @@
+from datetime import datetime, timezone, timedelta, date
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -14,12 +16,29 @@ import uuid
 router = APIRouter(prefix="/students", tags=["Students"])
 
 
+@router.get("/me", response_model=StudentResponse)
+def get_my_student_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return the Student profile linked to the currently logged-in student user."""
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only student users have an exercise profile")
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="No student profile linked to this account")
+    return student
+
+
 @router.get("/", response_model=list[StudentResponse])
 def list_students(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List all students for exercise selection."""
+    """Teachers see all students. Students see only their own profile."""
+    if current_user.role == "student":
+        student = db.query(Student).filter(Student.user_id == current_user.id).first()
+        return [student] if student else []
     return db.query(Student).order_by(Student.name).all()
 
 
@@ -34,6 +53,123 @@ def create_student(
     db.commit()
     db.refresh(student)
     return student
+
+@router.get("/summary")
+def get_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Collective dashboard stats for teachers."""
+    total_students = db.query(func.count(Student.id)).scalar() or 0
+
+    # All submitted sessions
+    submitted = db.query(SessionModel).filter(SessionModel.score.isnot(None))
+    total_sessions = submitted.count()
+
+    avg_row = submitted.with_entities(func.avg(SessionModel.score)).first()
+    average_score = round(float(avg_row[0] or 0), 3)
+
+    # Students active today (completed at least one session today, UTC)
+    # Use submitted_at (completion time). This avoids counting abandoned sessions
+    # and works consistently across SQLite/Postgres.
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    active_today = (
+        db.query(func.count(func.distinct(SessionModel.student_id)))
+        .filter(SessionModel.submitted_at.isnot(None), SessionModel.submitted_at >= today_start)
+        .scalar()
+    ) or 0
+
+    # Average sessions per student
+    avg_sessions_per_student = round(total_sessions / total_students, 1) if total_students else 0
+
+    return {
+        "total_students": total_students,
+        "total_sessions": total_sessions,
+        "average_score": average_score,
+        "active_today": active_today,
+        "avg_sessions_per_student": avg_sessions_per_student,
+    }
+
+
+@router.get("/attendance")
+def get_attendance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Per-student attendance: dates (last 30 days) when each student completed sessions.
+
+    IMPORTANT: Use SQL `date(...)` instead of casting to Date, because SQLite's
+    Date/DateTime casting is inconsistent and may yield NULL.
+    """
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+
+    students = db.query(Student).order_by(Student.name).all()
+    result = []
+    for s in students:
+        date_rows = (
+            db.query(func.distinct(func.date(SessionModel.submitted_at)))
+            .filter(
+                SessionModel.student_id == s.id,
+                SessionModel.submitted_at.isnot(None),
+                SessionModel.submitted_at >= thirty_days_ago,
+            )
+            .all()
+        )
+        # row[0] is typically a 'YYYY-MM-DD' string (SQLite) or date (Postgres)
+        normalized: list[str] = []
+        for (day,) in date_rows:
+            if not day:
+                continue
+            if isinstance(day, date):
+                normalized.append(day.isoformat())
+            else:
+                normalized.append(str(day))
+        dates = sorted(set(normalized))
+        result.append({
+            "student_id": s.id,
+            "student_name": s.name,
+            "dates": dates,
+        })
+    return result
+
+
+@router.get("/me/attendance")
+def get_my_attendance(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Attendance for the logged-in student only (last 30 days, UTC).
+
+    We intentionally do NOT reuse /students/attendance here to avoid exposing
+    other students' activity to student accounts.
+    """
+    if current_user.role != "student":
+        raise HTTPException(status_code=403, detail="Only student users can access their attendance")
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="No student profile linked to this account")
+
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    date_rows = (
+        db.query(func.distinct(func.date(SessionModel.submitted_at)))
+        .filter(
+            SessionModel.student_id == student.id,
+            SessionModel.submitted_at.isnot(None),
+            SessionModel.submitted_at >= thirty_days_ago,
+        )
+        .all()
+    )
+
+    normalized: list[str] = []
+    for (day,) in date_rows:
+        if not day:
+            continue
+        if isinstance(day, date):
+            normalized.append(day.isoformat())
+        else:
+            normalized.append(str(day))
+
+    return {"student_id": student.id, "student_name": student.name, "dates": sorted(set(normalized))}
 
 
 @router.get("/{student_id}", response_model=StudentResponse)

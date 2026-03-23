@@ -49,13 +49,14 @@ function fetchWithAuth(url: string, init?: RequestInit): Promise<Response> {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
-  user: { id: number; name: string; email: string; created_at: string };
+  user: { id: number; name: string; email: string; role: string; student_id?: string | null; created_at: string };
 }
 
 export async function signup(payload: {
   name: string;
   email: string;
   password: string;
+  role?: string;
 }): Promise<AuthResponse> {
   return parseJson(
     await fetch(`${API_BASE}/auth/signup`, {
@@ -76,7 +77,7 @@ export async function login(payload: { email: string; password: string }): Promi
   );
 }
 
-export async function fetchMe(): Promise<{ id: number; name: string; email: string; created_at: string }> {
+export async function fetchMe(): Promise<{ id: number; name: string; email: string; role: string; student_id?: string | null; created_at: string }> {
   return parseJson(await fetchWithAuth(`${API_BASE}/auth/me`));
 }
 
@@ -214,8 +215,30 @@ export async function processImage(payload: {
 
 // ── Exercises API (dyslexia-backend) ────────────────────────────────────────
 
+export interface ExerciseStats {
+  student_id: string;
+  student_name: string;
+  current_difficulty: number;
+  total_sessions: number;
+  average_score: number;
+  score_trend: number[];
+  words_mastered: string[];
+  words_struggling: string[];
+  total_words_practiced: number;
+  top_confusion_pairs: { pattern: string; count: number }[];
+  accuracy_by_type: Record<string, number>;
+}
+
 export async function fetchExerciseStudents(): Promise<ExerciseStudent[]> {
   return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/`));
+}
+
+export async function fetchMyStudentProfile(): Promise<ExerciseStudent> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/me`));
+}
+
+export async function fetchExerciseStats(studentId: string): Promise<ExerciseStats> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/${studentId}/stats`));
 }
 
 export async function createExerciseStudent(payload: { name: string; age?: number }): Promise<ExerciseStudent> {
@@ -298,4 +321,167 @@ export async function submitTracing(
       body: JSON.stringify(payload)
     })
   );
+}
+
+// ── Teacher Dashboard API ───────────────────────────────────────────────────
+
+export interface TeacherSummary {
+  total_students: number;
+  total_sessions: number;
+  average_score: number;
+  active_today: number;
+  avg_sessions_per_student: number;
+}
+
+export interface StudentAttendance {
+  student_id: string;
+  student_name: string;
+  dates: string[];
+}
+
+export async function fetchTeacherSummary(): Promise<TeacherSummary> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/summary`));
+}
+
+export async function fetchAllAttendance(): Promise<StudentAttendance[]> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/attendance`));
+}
+
+export async function fetchMyAttendance(): Promise<StudentAttendance> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/students/me/attendance`));
+}
+
+// ── Assignments API (dyslexia-backend) ───────────────────────────────────────
+
+export type AssignmentExerciseType = "word_typing" | "sentence_typing" | "handwriting" | "tracing";
+
+export interface AssignmentListItem {
+  id: number;
+  student_id: string;
+  student_name?: string | null;
+  title: string;
+  description?: string | null;
+  due_at?: string | null;
+  created_at?: string | null;
+  exercise_count: number;
+  completed_sessions: number;
+  completed_exercises: number;
+  types: string[];
+  avg_score?: number | null;
+}
+
+export interface AssignmentDetailExercise {
+  id: string;
+  type: AssignmentExerciseType;
+  content: string;
+  expected: string;
+  target_words: string[];
+  difficulty: number;
+  completed: boolean;
+  attempts: number;
+  last_result?: { score: number; feedback?: string | null; student_response?: string | null; submitted_at?: string | null } | null;
+}
+
+export interface AssignmentDetail {
+  id: number;
+  student_id: string;
+  title: string;
+  description?: string | null;
+  due_at?: string | null;
+  created_at?: string | null;
+  exercises: AssignmentDetailExercise[];
+}
+
+export async function listAssignments(): Promise<AssignmentListItem[]> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/assignments`));
+}
+
+export async function getAssignment(assignmentId: number): Promise<AssignmentDetail> {
+  return parseJson(await fetchWithAuth(`${EXERCISES_BASE}/assignments/${assignmentId}`));
+}
+
+export async function createAssignment(payload: {
+  student_id: string;
+  title: string;
+  description?: string;
+  due_at?: string | null; // ISO
+  mode: "custom" | "generate";
+  custom_exercises?: Array<{
+    type: AssignmentExerciseType;
+    content: string;
+    expected: string;
+    target_words: string[];
+    difficulty: number;
+  }>;
+  generate?: {
+    type: AssignmentExerciseType;
+    words: string[];
+    difficulty: number;
+    student_age: number;
+    count: number;
+  };
+}): Promise<{ id: number }> {
+  return parseJson(
+    await fetchWithAuth(`${EXERCISES_BASE}/assignments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+// ── Game Mode API ────────────────────────────────────────────────────────────
+
+export interface GameTodayResponse {
+  day: { day_number: number; phase_number: number; title: string };
+  progress: { current_day: number; streak: number; last_completed_date?: string | null };
+  exercises: Array<{ id: number; order_in_day: number; exercise_type: string; content: any }>;
+}
+
+export interface GameProgressResponse {
+  progress: { current_day: number; streak: number; last_completed_date?: string | null };
+  completions: Array<{ day_number: number; completed_at?: string | null; score: number; puzzle_piece_earned: boolean; phase_number: number }>;
+}
+
+export interface GamePuzzleResponse {
+  phase: number;
+  day_range: [number, number];
+  pieces_earned: number[];
+  pieces_total: number;
+}
+
+export async function seedGame(): Promise<any> {
+  return parseJson(await fetchWithAuth(`${API_BASE}/game/seed`, { method: "POST" }));
+}
+
+export async function fetchGameToday(): Promise<GameTodayResponse> {
+  return parseJson(await fetchWithAuth(`${API_BASE}/game/today`));
+}
+
+export interface GameCompleteDayResponse {
+  completed: boolean;
+  already_completed?: boolean;
+  day_number: number;
+  score: number;
+  puzzle_piece_earned?: boolean;
+  next_day?: number;
+  streak?: number;
+}
+
+export async function completeGameDay(payload: { day_number: number; exercise_scores: number[] }): Promise<GameCompleteDayResponse> {
+  return parseJson(
+    await fetchWithAuth(`${API_BASE}/game/complete-day`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function fetchGameProgress(): Promise<GameProgressResponse> {
+  return parseJson(await fetchWithAuth(`${API_BASE}/game/progress`));
+}
+
+export async function fetchGamePuzzle(phase: number): Promise<GamePuzzleResponse> {
+  return parseJson(await fetchWithAuth(`${API_BASE}/game/puzzle/${phase}`));
 }

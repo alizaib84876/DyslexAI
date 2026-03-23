@@ -6,6 +6,7 @@ class SessionCreate(BaseModel):
     student_id: uuid.UUID
     exercise_id: uuid.UUID
     is_handwriting: Optional[bool] = False
+    assignment_id: Optional[int] = None
 
 class SessionSubmit(BaseModel):
     student_response: str

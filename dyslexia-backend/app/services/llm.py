@@ -5,8 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+_client = None
 MODEL  = "llama-3.3-70b-versatile"
+
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise RuntimeError("GROQ_API_KEY is not set — LLM features are unavailable")
+        _client = Groq(api_key=api_key)
+    return _client
 
 
 def generate_feedback(
@@ -42,26 +51,34 @@ def generate_feedback(
     score_percent = round(score * 100)
     words_str     = ", ".join(target_words) if target_words else "the exercise"
 
-    prompt = f"""You are a warm, encouraging teacher helping a child aged {student_age} who has dyslexia.
-The child just completed a {exercise_type} exercise practicing these words: {words_str}.
-Their score was {score_percent}%.
+    tone = (
+        "low" if score_percent < 40 else
+        "mid" if score_percent < 75 else
+        "high"
+    )
+
+    prompt = f"""You are a supportive teacher helping a child aged {student_age}.
+The child just completed a {exercise_type} exercise practicing targeted words/letters.
+Their score was {score_percent}% (tone: {tone}).
 {f"Errors made: {error_summary}" if error_summary else "They made no errors."}
 
 Write short feedback in exactly 3 sentences:
-1. Acknowledge their score warmly and positively
-2. Give one specific, gentle tip about their mistake if they made one, or praise their accuracy if they did not
-3. Encourage them to keep going with energy
+1) If tone is low: be kind but realistic (avoid "awesome", "amazing", "perfect"). Clearly say they need more practice.
+   If tone is mid: balanced encouragement + one concrete improvement tip.
+   If tone is high: strong praise + one small tip or reinforcement.
+2) Give one specific tip based on the errors (or a practice tip if no errors provided).
+3) End with a motivating next step (what to do next).
 
 Rules:
 - Never use the word dyslexia
 - Use simple words a {student_age} year old understands
-- Be warm, specific, and motivating
-- Do not use bullet points or numbering in your response
-- Maximum 60 words total
-- Return plain text only, no formatting"""
+- Do not repeat or name the specific practice words/letters in your feedback (e.g., avoid saying the exact target word)
+- Do not use bullet points or numbering in the response
+- Maximum 65 words total
+- Return plain text only"""
 
     try:
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model    = MODEL,
             messages = [{"role": "user", "content": prompt}],
             max_tokens = 120,
@@ -70,12 +87,11 @@ Rules:
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Feedback generation failed: {e}")
-        if score >= 0.8:
-            return "Great work! You are doing really well. Keep it up!"
-        elif score >= 0.5:
-            return "Good effort! Every practice session makes you stronger. Keep going!"
-        else:
-            return "Keep trying! Hard work always pays off. You are doing great!"
+        if score >= 0.85:
+            return "Great work — that was very accurate. Keep the same focus on each word. Try one more and see if you can match this score."
+        if score >= 0.5:
+            return "Good effort. Slow down and check each letter carefully. Try the same word again and improve your score."
+        return "That was a tough one, and that's okay. Let’s practice slowly: say the word out loud, then write it letter by letter. Try again and aim for a higher score."
 
 
 def generate_exercises(
@@ -153,7 +169,7 @@ Example format:
 ]"""
 
     try:
-        response = client.chat.completions.create(
+        response = _get_client().chat.completions.create(
             model    = MODEL,
             messages = [{"role": "user", "content": prompt}],
             max_tokens  = 800,

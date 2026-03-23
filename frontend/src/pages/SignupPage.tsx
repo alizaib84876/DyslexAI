@@ -9,6 +9,7 @@ export function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"student" | "teacher">("student");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -17,7 +18,7 @@ export function SignupPage() {
     setError(null);
     setBusy(true);
     try {
-      await signup(name, email, password, from || "/dashboard");
+      await signup(name, email, password, role, from || "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
     } finally {
@@ -34,6 +35,27 @@ export function SignupPage() {
         <p className="auth-subtitle">Sign up to start using DyslexAI</p>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit} className="auth-form">
+          <label className="field">
+            <span>I am a</span>
+            <div className="role-toggle">
+              <button
+                type="button"
+                className={`role-btn ${role === "student" ? "role-btn-active" : ""}`}
+                onClick={() => setRole("student")}
+                disabled={busy}
+              >
+                🎓 Student
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${role === "teacher" ? "role-btn-active" : ""}`}
+                onClick={() => setRole("teacher")}
+                disabled={busy}
+              >
+                📚 Teacher
+              </button>
+            </div>
+          </label>
           <label className="field">
             <span>Name</span>
             <input

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import create_access_token, decode_token, hash_password, verify_password
 from app.database import get_db
 from app.models.user import User
+from app.models.student import Student
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -19,6 +20,7 @@ class SignupRequest(BaseModel):
     name: str
     email: str
     password: str
+    role: str = "student"  # "student" or "teacher"
 
 
 class LoginRequest(BaseModel):
@@ -36,6 +38,8 @@ class UserMe(BaseModel):
     id: int
     name: str
     email: str
+    role: str
+    student_id: str | None = None
     created_at: str
 
 
@@ -69,21 +73,37 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
+    role = (data.role or "").strip().lower()
+    if role not in ("student", "teacher"):
+        raise HTTPException(status_code=400, detail="Role must be 'student' or 'teacher'")
     user = User(
         name=(data.name or "").strip(),
         email=email,
         password_hash=hash_password(data.password),
+        role=role,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    token = create_access_token({"sub": str(user.id)})
+
+    # Auto-create a linked Student profile for student users
+    student_id = None
+    if role == "student":
+        student = Student(name=user.name, user_id=user.id)
+        db.add(student)
+        db.commit()
+        db.refresh(student)
+        student_id = student.id
+
+    token = create_access_token({"sub": str(user.id), "role": user.role})
     return AuthResponse(
         access_token=token,
         user={
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "role": user.role,
+            "student_id": student_id,
             "created_at": user.created_at.isoformat() if user.created_at else "",
         },
     )
@@ -96,13 +116,23 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    token = create_access_token({"sub": str(user.id)})
+
+    # Fetch linked student profile if this is a student user
+    student_id = None
+    if user.role == "student":
+        student = db.query(Student).filter(Student.user_id == user.id).first()
+        if student:
+            student_id = student.id
+
+    token = create_access_token({"sub": str(user.id), "role": user.role})
     return AuthResponse(
         access_token=token,
         user={
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "role": user.role,
+            "student_id": student_id,
             "created_at": user.created_at.isoformat() if user.created_at else "",
         },
     )
@@ -120,10 +150,19 @@ def me(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+
+    student_id = None
+    if (user.role or "student") == "student":
+        student = db.query(Student).filter(Student.user_id == user.id).first()
+        if student:
+            student_id = student.id
+
     return UserMe(
         id=user.id,
         name=user.name,
         email=user.email,
+        role=user.role or "student",
+        student_id=student_id,
         created_at=user.created_at.isoformat() if user.created_at else "",
     )
 

@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.session import Session
 from app.models.exercise import Exercise
 from app.models.student import Student
+from app.models.assignment import Assignment
 from app.models.word_mastery import WordMastery
 from app.schemas.session import SessionCreate, SessionSubmit, SubmitResponse, HandwritingSubmitResponse, TracingSubmit, TracingSubmitResponse
 from app.services.evaluator import evaluate_response
@@ -34,13 +35,20 @@ def update_word_mastery(db, student_id, words: list, was_correct: bool):
             db.add(wm)
             db.flush()
 
+        # Track counts (for history), but drive the adaptive selection using
+        # an EMA-like mastery score so one good attempt quickly improves.
         wm.times_seen    = (wm.times_seen or 0) + 1
         wm.times_correct = (wm.times_correct or 0) + (1 if was_correct else 0)
         wm.last_seen     = datetime.now(timezone.utc)
-        wm.mastery_score = wm.times_correct / wm.times_seen
+
+        # EMA update: makes mastery recover faster after a satisfactory attempt.
+        # new = 0.7*old + 0.3*(1 or 0)
+        old = float(wm.mastery_score or 0.0)
+        obs = 1.0 if was_correct else 0.0
+        wm.mastery_score = max(0.0, min(1.0, (0.7 * old) + (0.3 * obs)))
     db.commit()
 
-def update_difficulty(db, student, recent_n: int = 3):
+def update_difficulty(db, student, recent_n: int = 5):
     recent = (
         db.query(Session)
         .filter(Session.student_id == student.id, Session.score.isnot(None))
@@ -48,14 +56,23 @@ def update_difficulty(db, student, recent_n: int = 3):
         .limit(recent_n)
         .all()
     )
-    if len(recent) < 2:
+    # Don't change difficulty until we have enough recent data.
+    if len(recent) < recent_n:
         return student.difficulty_level
 
     avg = sum(s.score for s in recent) / len(recent)
-    if avg > 0.80:
+
+    # Require "many" successful attempts to increase difficulty.
+    # This matches the expectation that level ramps up only after consistent success.
+    success_threshold = 0.80
+    success_count = sum(1 for s in recent if s.score is not None and s.score >= success_threshold)
+
+    # Increase only when the majority are strongly successful.
+    if success_count >= 4 and avg >= 0.78 and student.total_sessions >= recent_n:
         student.difficulty_level = min(10, student.difficulty_level + 1)
-    elif avg < 0.50:
-        student.difficulty_level = max(1,  student.difficulty_level - 1)
+    # Decrease when the student is struggling consistently.
+    elif success_count <= 1 and avg < 0.55:
+        student.difficulty_level = max(1, student.difficulty_level - 1)
     db.commit()
     return student.difficulty_level
 
@@ -89,11 +106,23 @@ def create_session(
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
+    assignment_id = data.assignment_id
+    if assignment_id is not None:
+        assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        if str(assignment.student_id) != str(student.id):
+            raise HTTPException(status_code=400, detail="Assignment does not belong to this student")
+        # Students can only create sessions for their own assignment
+        if current_user.role == "student" and student.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not allowed")
+
     session = Session(
         student_id     = sid,
         exercise_id    = eid,
         is_handwriting = data.is_handwriting,
-        expected       = exercise.expected
+        expected       = exercise.expected,
+        assignment_id  = assignment_id
     )
     db.add(session)
     db.commit()
@@ -139,7 +168,9 @@ def submit_session(
     # 4. Update word mastery
     exercise     = db.query(Exercise).filter(Exercise.id == session.exercise_id).first()
     target_words = exercise.target_words or []
-    was_correct  = result["score"] >= 0.75
+    # Consider a response "good enough" at 0.70 so mastery updates
+    # promptly for dyslexic kids (avoids repeating the same target too long).
+    was_correct  = result["score"] >= 0.70
     update_word_mastery(db, session.student_id, target_words, was_correct)
 
     # 5. Adjust difficulty
@@ -160,6 +191,8 @@ def submit_session(
         student_age   = age,
         exercise_type = exercise_for_feedback.type if exercise_for_feedback else "typing"
     )
+    session.feedback = feedback
+    db.commit()
 
     return SubmitResponse(
         session_id        = session.id,
@@ -206,8 +239,19 @@ async def submit_handwriting(
 
     # ── Run OCR (notebook pipeline: DocTR + TrOCR notebook_parity + correction) ──
     image_bytes = await file.read()
-    ocr_result  = process_handwriting_image(image_bytes)
-    ocr_text       = ocr_result["corrected_text"]
+    try:
+        ocr_result = process_handwriting_image(image_bytes)
+    except Exception as e:
+        # Important: return a proper JSON error instead of letting the request
+        # fail at the transport layer. This avoids frontend showing "Failed to fetch".
+        raise HTTPException(
+            status_code=500,
+            detail=f"Handwriting OCR failed: {str(e)}"
+        )
+    # For adaptive handwritten exercises, we only want to recognize
+    # what the student wrote. "Corrected" text should not be returned
+    # because it would not reflect the student's original writing.
+    ocr_text       = ocr_result.get("recognized_text") or ocr_result.get("corrected_text") or ""
     ocr_confidence = ocr_result["confidence"]
     recognized_text = ocr_result.get("recognized_text", ocr_text)
 
@@ -246,7 +290,7 @@ async def submit_handwriting(
     # ── 4. Update word mastery ───────────────────────────────────────
     exercise     = db.query(Exercise).filter(Exercise.id == session.exercise_id).first()
     target_words = exercise.target_words or []
-    was_correct  = result["score"] >= 0.75
+    was_correct  = result["score"] >= 0.70
     update_word_mastery(db, session.student_id, target_words, was_correct)
 
     # ── 5. Adjust difficulty ─────────────────────────────────────────
@@ -261,6 +305,8 @@ async def submit_handwriting(
         student_age   = age,
         exercise_type = "handwriting"
     )
+    session.feedback = feedback
+    db.commit()
 
     return HandwritingSubmitResponse(
         session_id           = session.id,
@@ -272,7 +318,7 @@ async def submit_handwriting(
         words_updated        = target_words,
         ocr_text             = recognized_text,
         ocr_confidence       = ocr_confidence,
-        corrected_text       = ocr_text,
+        corrected_text       = None,
     )
 
 
@@ -323,7 +369,7 @@ def submit_tracing(
     # ── 3. Update word mastery ───────────────────────────────────────
     exercise     = db.query(Exercise).filter(Exercise.id == session.exercise_id).first()
     target_words = exercise.target_words or []
-    was_correct  = trace_score >= 0.75
+    was_correct  = trace_score >= 0.70
     update_word_mastery(db, session.student_id, target_words, was_correct)
 
     # ── 4. Adjust difficulty ─────────────────────────────────────────
@@ -338,6 +384,8 @@ def submit_tracing(
         student_age   = age,
         exercise_type = "tracing"
     )
+    session.feedback = feedback
+    db.commit()
 
     return TracingSubmitResponse(
         session_id           = session.id,

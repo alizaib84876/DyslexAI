@@ -1,49 +1,32 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { AnnotatedImageViewer } from "../components/AnnotatedImageViewer";
-import { ComparisonViewer } from "../components/ComparisonViewer";
-import { CorrectionHighlights } from "../components/CorrectionHighlights";
-import { PipelineInsights } from "../components/PipelineInsights";
-import { UploadPanel } from "../components/UploadPanel";
-import { fetchExerciseStudents, processImage } from "../lib/api";
-import type { ExerciseStudent, OCRRun } from "../types";
+import { processImage } from "../lib/api";
+import { toAssetUrl } from "../lib/api";
+import type { OCRRun } from "../types";
+import { useAuth } from "../contexts/AuthContext";
+import { OcrHistoryPanel } from "../components/OcrHistoryPanel";
 
 export function WorkspacePage() {
-  const [students, setStudents] = useState<ExerciseStudent[]>([]);
   const [result, setResult] = useState<OCRRun | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchExerciseStudents()
-      .then(setStudents)
-      .catch((err: Error) => setError(err.message));
-  }, []);
+  const isTeacher = user?.role === "teacher";
+  const [file, setFile] = useState<File | null>(null);
 
-  async function handleUpload(payload: {
-    file: File;
-    studentId?: number | string;
-    qualityMode: string;
-    referenceText?: string;
-  }) {
+  const canSubmit = useMemo(() => !!file && !busy, [file, busy]);
+
+  async function handleUpload() {
+    if (!file) return;
     setBusy(true);
     setError(null);
-    setStatus(
-      payload.qualityMode === "fast_local"
-        ? "Processing in Fast mode… (optimized for speed)"
-        : payload.qualityMode === "quality_local" || payload.qualityMode === "cloud_refine"
-          ? "Processing in Quality mode… TrOCR may take 30–90 seconds for handwriting. Please wait…"
-          : "Processing…"
-    );
+    setStatus("Processing… DocTR segmentation + TrOCR Large + correction (first run may take 30–90s).");
     try {
-      const studentIdNum =
-        payload.studentId != null && !Number.isNaN(Number(payload.studentId))
-          ? Number(payload.studentId)
-          : undefined;
       const response = await processImage({
-        ...payload,
-        studentId: studentIdNum
+        file,
+        qualityMode: "quality_local"
       });
       setResult(response);
       setStatus(null);
@@ -51,7 +34,7 @@ export function WorkspacePage() {
       const msg = err instanceof Error ? err.message : "Processing failed";
       let displayMsg = msg;
       if (msg.includes("abort") || msg.includes("AbortError")) {
-        displayMsg = "OCR timed out. Try Fast mode or a smaller image.";
+        displayMsg = "OCR timed out. Try a smaller/cropped image.";
       } else if (msg.includes("fetch") || msg.includes("Failed to fetch")) {
         displayMsg = "Could not reach OCR service. Make sure the backend is running on port 8000.";
       } else if (msg.includes("Not Found") || msg.includes('"detail":"Not Found"')) {
@@ -72,35 +55,85 @@ export function WorkspacePage() {
     <div className="page-stack">
       <section className="hero">
         <div>
-          <span className="hero-badge">Local-First OCR Workspace</span>
-          <h1>DyslexAI Processing Studio</h1>
+          <span className="hero-badge">Teacher OCR Studio</span>
+          <h1>Handwriting OCR</h1>
           <p>
-            Upload handwriting, inspect OCR confidence, compare raw and corrected
-            text, and review every correction with transparent evidence.
+            Upload a handwriting image to extract text.
           </p>
         </div>
       </section>
 
-      <UploadPanel students={students} onSubmit={handleUpload} busy={busy} />
+      {!isTeacher ? (
+        <div className="error-banner">
+          This tool is intended for teachers. Please switch to a teacher account to use OCR Studio.
+        </div>
+      ) : (
+        <div className="card">
+          <h3>Upload handwriting image</h3>
+          <div className="form-row" style={{ alignItems: "center" }}>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/bmp,image/tiff"
+              disabled={busy}
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setFile(f);
+                setResult(null);
+                setError(null);
+                setStatus(null);
+              }}
+            />
+            <button onClick={handleUpload} disabled={!canSubmit}>
+              {busy ? "Processing…" : "Convert to text"}
+            </button>
+          </div>
+          <p style={{ color: "var(--color-text-secondary)", marginTop: 10 }}>
+            Tip: crop tightly around the paragraph and ensure good lighting for best results.
+          </p>
+        </div>
+      )}
 
       {error ? <div className="error-banner">{error}</div> : null}
       {status ? <div className="card"><p>{status}</p></div> : null}
 
-      <PipelineInsights result={result} />
-      <AnnotatedImageViewer
-        originalImagePath={result?.original_image_path}
-        originalImageUrl={result?.original_image_url}
-        annotatedImagePath={result?.annotated_image_path}
-        preprocessedImagePath={result?.preprocessed_image_path}
-      />
-      <ComparisonViewer
-        rawText={result?.raw_text}
-        correctedText={result?.corrected_text}
-        correctionLayer1={result?.correction_layer1}
-        correctionLayer2={result?.correction_layer2}
-        correctionLayer3={result?.correction_layer3}
-      />
-      <CorrectionHighlights lines={result?.lines ?? []} />
+      <OcrHistoryPanel />
+
+      {result && (
+        <>
+          <div className="card">
+            <h3>Original image</h3>
+            {toAssetUrl(result.original_image_path, result.original_image_url) ? (
+              <img
+                src={toAssetUrl(result.original_image_path, result.original_image_url) ?? undefined}
+                alt="Original handwriting upload"
+                style={{ width: "100%", maxWidth: 820, borderRadius: 14, border: "1px solid var(--color-divider)" }}
+              />
+            ) : (
+              <p style={{ color: "var(--color-text-secondary)" }}>Original image not available.</p>
+            )}
+          </div>
+          <div className="card">
+            <h3>Raw text</h3>
+            <textarea
+              className="text-area"
+              value={result.raw_text || ""}
+              readOnly
+              rows={10}
+              style={{ width: "100%", resize: "vertical" }}
+            />
+          </div>
+          <div className="card">
+            <h3>Corrected text</h3>
+            <textarea
+              className="text-area"
+              value={result.corrected_text || ""}
+              readOnly
+              rows={10}
+              style={{ width: "100%", resize: "vertical" }}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

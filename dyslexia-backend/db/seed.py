@@ -28,9 +28,9 @@ def seed():
 
         # ── LEVEL 1-2 | word_typing ──────────────────────────────────────
         Exercise(type="word_typing", difficulty=1, age_group="5-7",
-            content="Type this word: cat",
-            expected="cat",
-            target_words=["cat"]),
+            content="Type this word: bad",
+            expected="bad",
+            target_words=["bad"]),
 
         Exercise(type="word_typing", difficulty=1, age_group="5-7",
             content="Type this word: bat",
@@ -69,9 +69,9 @@ def seed():
 
         # ── LEVEL 1-2 | sentence_typing ──────────────────────────────────
         Exercise(type="sentence_typing", difficulty=1, age_group="5-7",
-            content="Type this sentence: The cat sat on the mat",
-            expected="the cat sat on the mat",
-            target_words=["cat", "sat", "mat"]),
+            content="Type this sentence: The bad dog sat on the bed",
+            expected="the bad dog sat on the bed",
+            target_words=["bad", "dog", "sat", "bed"]),
 
         Exercise(type="sentence_typing", difficulty=1, age_group="5-7",
             content="Type this sentence: The dog ran fast",
@@ -152,9 +152,9 @@ def seed():
             target_words=["beautiful"]),
 
         Exercise(type="word_typing", difficulty=6, age_group="11-13",
-            content="Type this word: rhythm",
-            expected="rhythm",
-            target_words=["rhythm"]),
+            content="Type this word: bridge",
+            expected="bridge",
+            target_words=["bridge"]),
 
         Exercise(type="word_typing", difficulty=6, age_group="11-13",
             content="Type this word: necessary",
@@ -168,15 +168,15 @@ def seed():
             target_words=["necessary", "study", "every"]),
 
         Exercise(type="sentence_typing", difficulty=6, age_group="11-13",
-            content="Type this sentence: The beautiful rhythm of the music filled the room",
-            expected="the beautiful rhythm of the music filled the room",
-            target_words=["beautiful", "rhythm", "music"]),
+            content="Type this sentence: The bright bridge over the river lit the night",
+            expected="the bright bridge over the river lit the night",
+            target_words=["bright", "bridge", "river", "night"]),
 
         # ── HANDWRITING | difficulty 1 ───────────────────────────────────
         Exercise(type="handwriting", difficulty=1, age_group="5-7",
-            content="Write this sentence: The cat sat on the mat",
-            expected="the cat sat on the mat",
-            target_words=["cat", "sat", "mat"],
+            content="Write this sentence: The bad dog sat on the bed",
+            expected="the bad dog sat on the bed",
+            target_words=["bad", "dog", "sat", "bed"],
             source="pre_stored"),
 
         Exercise(type="handwriting", difficulty=1, age_group="5-7",
@@ -245,15 +245,15 @@ def seed():
 
         # ── HANDWRITING | difficulty 6 ───────────────────────────────────
         Exercise(type="handwriting", difficulty=6, age_group="11-13",
-            content="Write this sentence: She danced to the beautiful rhythm",
-            expected="she danced to the beautiful rhythm",
-            target_words=["beautiful", "rhythm"],
+            content="Write this sentence: She crossed the bridge at night",
+            expected="she crossed the bridge at night",
+            target_words=["bridge", "night"],
             source="pre_stored"),
 
         Exercise(type="handwriting", difficulty=6, age_group="11-13",
-            content="Write this word: rhythm",
-            expected="rhythm",
-            target_words=["rhythm"],
+            content="Write this word: bridge",
+            expected="bridge",
+            target_words=["bridge"],
             source="pre_stored"),
 
         # ── TRACING | difficulty 1 ───────────────────────────────────
@@ -335,9 +335,9 @@ def seed():
 
         # ── TRACING | difficulty 6 ───────────────────────────────────
         Exercise(type="tracing", difficulty=6, age_group="11-13",
-            content="Trace this word: rhythm",
-            expected="rhythm",
-            target_words=["rhythm"],
+            content="Trace this word: bridge",
+            expected="bridge",
+            target_words=["bridge"],
             source="pre_stored"),
     ]
 

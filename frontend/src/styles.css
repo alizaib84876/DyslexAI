@@ -533,6 +533,41 @@ textarea {
   align-items: center;
 }
 
+.form-row button:not(.btn-type) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+  box-shadow: 0 3px 10px rgba(48, 140, 232, 0.28);
+  white-space: nowrap;
+}
+
+.form-row button:not(.btn-type):hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(48, 140, 232, 0.38);
+}
+
+.form-row button:not(.btn-type):active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.form-row button:not(.btn-type):disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
 .form-row input[type="text"],
 .form-row select {
   padding: 10px 14px;
@@ -541,6 +576,150 @@ textarea {
   background: #ffffff;
   color: #1e293b;
   min-width: 180px;
+}
+
+/* Assignments form layout */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.assignments-field {
+  display: grid;
+  gap: 6px;
+}
+
+.assignments-field-span2 {
+  grid-column: span 2;
+}
+
+.assignments-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.assignments-grid input,
+.assignments-grid select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+/* Assignment Mode (student attempting) */
+.as-player {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.as-player-card {
+  width: min(900px, 100%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 22px 22px 18px;
+}
+
+.as-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.as-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(48, 140, 232, 0.12);
+  color: var(--color-primary-dark);
+}
+
+.as-title {
+  margin: 10px 0 4px;
+  font-size: 22px;
+}
+
+.as-subtitle {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.as-exit {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.as-prompt {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  padding: 18px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  margin: 12px 0 16px;
+}
+
+.as-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.as-input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+}
+
+.as-result {
+  margin-top: 14px;
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-elevated);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.as-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.as-results {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.as-result-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: 12px;
+}
+
+.as-muted {
+  color: var(--color-text-secondary);
 }
 
 .exercise-content {
@@ -568,15 +747,15 @@ textarea {
 
 .tracing-canvas-wrap {
   margin: 14px 0;
+  width: 100%;
 }
 
 .tracing-canvas {
   display: block;
   width: 100%;
-  max-width: 400px;
   border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  background: #1a2234;
 }
 
 .preview-wrap {
@@ -1550,5 +1729,987 @@ textarea {
 
   .gx-btn {
     width: 100%;
+  }
+}
+
+/* ── Role toggle (signup) ──────────────────────────────────────── */
+.role-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid var(--border, #334155);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.role-btn:hover {
+  border-color: var(--accent, #308ce8);
+  color: var(--text-primary, #e2e8f0);
+}
+
+.role-btn-active {
+  border-color: var(--accent, #308ce8);
+  background: var(--accent, #308ce8);
+  color: #fff;
+}
+
+/* ── Student Stats Card ──────────────────────────────────────────────────── */
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stats-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.stat-chip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.stat-chip-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.stat-chip-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.stat-chip-warn .stat-chip-value {
+  color: var(--color-warning);
+}
+
+/* ── Premium SVG Score-Trend Chart ───────────────────────────────────────── */
+.score-chart-wrap {
+  margin-top: 8px;
+}
+
+/* Tooltip hidden by default, shown on group hover */
+.score-dot-group .score-tooltip {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.score-dot-group:hover .score-tooltip {
+  opacity: 1;
+}
+
+/* Pulse halo on hover */
+@keyframes score-halo-pulse {
+
+  0%,
+  100% {
+    r: 8px;
+    opacity: 0.12;
+  }
+
+  50% {
+    r: 13px;
+    opacity: 0.22;
+  }
+}
+
+.score-dot-group:hover .score-dot-halo {
+  animation: score-halo-pulse 1s ease-in-out infinite;
+}
+
+/* Legend */
+.score-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.score-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.score-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Exercise Type Buttons ───────────────────────────────────────────────── */
+.btn-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+  box-shadow: 0 3px 10px rgba(48, 140, 232, 0.28);
+  white-space: nowrap;
+}
+
+.btn-type:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(48, 140, 232, 0.38);
+}
+
+.btn-type:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.btn-type:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.stats-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 700px) {
+  .stats-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.type-accuracy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.type-accuracy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.type-label {
+  width: 120px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.type-bar-bg {
+  flex: 1;
+  height: 10px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.type-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s;
+}
+
+.type-bar-good {
+  background: var(--color-success);
+}
+
+.type-bar-mid {
+  background: var(--color-warning);
+}
+
+.type-bar-low {
+  background: var(--color-error);
+}
+
+.type-pct {
+  font-size: 0.8rem;
+  width: 36px;
+  text-align: right;
+  color: var(--color-text-secondary);
+}
+
+.confusion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.confusion-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface-elevated);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.confusion-pattern {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.confusion-count {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.word-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.word-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.word-chip-good {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.word-chip-warn {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* ── Teacher Students page layout ───────────────────────────────────────── */
+.students-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 900px) {
+  .students-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.students-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.students-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.student-list-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.15s;
+}
+
+.student-list-btn:hover {
+  background: var(--color-surface-elevated);
+}
+
+.student-list-btn strong {
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.student-list-btn span {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.student-list-btn-active {
+  border-color: var(--color-primary);
+  background: #e8f4fd;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Teacher Dashboard
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Collective Metric Cards ── */
+.teacher-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 900px) {
+  .teacher-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .teacher-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teacher-metric-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.teacher-metric-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+}
+
+.teacher-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(48, 140, 232, 0.15);
+}
+
+.teacher-metric-icon {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+
+.teacher-metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.teacher-metric-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Student Search Dropdown ── */
+.student-search-wrap {
+  position: relative;
+}
+
+.student-search-box {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0 var(--spacing-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.student-search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(48, 140, 232, 0.12);
+}
+
+.student-search-icon {
+  font-size: 1rem;
+  margin-right: var(--spacing-sm);
+  color: var(--color-text-muted);
+}
+
+.student-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  outline: none;
+}
+
+.student-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.student-search-clear {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+.student-search-clear:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.student-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.student-dropdown-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 10px var(--spacing-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.12s;
+  border-bottom: 1px solid var(--color-divider);
+}
+.student-dropdown-item:last-child {
+  border-bottom: none;
+}
+.student-dropdown-item:hover {
+  background: rgba(48, 140, 232, 0.06);
+}
+.student-dropdown-item-active {
+  background: rgba(48, 140, 232, 0.1);
+}
+.student-dropdown-item strong {
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+.student-dropdown-item span {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.student-dropdown-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+/* ── Attendance Grid ── */
+.attendance-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-x: auto;
+}
+
+.attendance-header-row,
+.attendance-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: max-content;
+}
+
+.attendance-name-col {
+  width: 140px;
+  min-width: 140px;
+  flex-shrink: 0;
+  padding: 6px 10px 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.attendance-student-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendance-active-count {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.attendance-days-col {
+  display: flex;
+  gap: 3px;
+}
+
+.attendance-day-header {
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.attendance-weekday {
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.attendance-date-num {
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+.attendance-cell {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  transition: background 0.15s, transform 0.1s;
+  cursor: default;
+}
+
+.attendance-cell:hover {
+  transform: scale(1.2);
+  z-index: 2;
+}
+
+.attendance-cell-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 1px 3px rgba(48, 140, 232, 0.3);
+}
+
+.attendance-legend {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-divider);
+}
+
+.attendance-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+/* ── Game Mode (curriculum) ──────────────────────────────────────────────── */
+
+.gm-exercise {
+  font-size: 18px;
+}
+
+.gm-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.gm-split {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 2px solid var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.gm-split-active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(48, 140, 232, 0.2);
+}
+
+/* Dashboard — Game Mode summary */
+.dashboard-game-card {
+  border-left: 4px solid #8b5cf6;
+  background: linear-gradient(135deg, var(--color-surface) 0%, rgba(139, 92, 246, 0.06) 100%);
+}
+
+.dashboard-game-stat {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+}
+
+.dashboard-game-stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.dashboard-game-stat-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+/* Kid-friendly Game Mode (pages under /game) */
+.game-mode-kids {
+  font-family: "Nunito", "Lexend", system-ui, sans-serif;
+  background: linear-gradient(165deg, #dbeafe 0%, #fef9c3 38%, #d1fae5 100%);
+  border-radius: 24px;
+  padding: 20px 14px 32px;
+  margin-bottom: 8px;
+}
+
+.game-mode-kids h1,
+.game-mode-kids h2 {
+  font-family: "Nunito", "Lexend", system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #1e1b4b;
+}
+
+.gm-hero-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 3px solid #fff !important;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.1) !important;
+  border-radius: 24px !important;
+}
+
+.gm-mascot {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gm-mascot {
+    animation: gm-mascot-float 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes gm-mascot-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.gm-lead {
+  font-size: 1.12rem;
+  line-height: 1.55;
+  color: #334155;
+  margin: 0 0 8px;
+}
+
+.gm-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.gm-stat-bubble {
+  margin-top: 0 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 2px dashed #c4b5fd !important;
+  border-radius: 20px !important;
+}
+
+.gm-stat-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gm-stat-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #312e81;
+  margin-top: 6px;
+  line-height: 1.25;
+}
+
+.gm-stat-sub {
+  font-size: 1rem;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+.gm-big-score {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #7c3aed;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.gm-btn-big {
+  min-height: 52px !important;
+  padding: 14px 22px !important;
+  font-size: 1.08rem !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+}
+
+.gm-btn-play {
+  min-height: 56px !important;
+  padding: 16px 28px !important;
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #a855f7 0%, #6366f1 45%, #2563eb 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.45);
+}
+
+.game-mode-kids .btn.primary:not(.gm-btn-play) {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 6px 22px rgba(99, 102, 241, 0.4);
+}
+
+.game-mode-kids .btn:not(.primary) {
+  background: #ffffff;
+  border: 3px solid #e9d5ff;
+  color: #4c1d95;
+  font-weight: 800;
+}
+
+.gm-session-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.gm-progress-track {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.gm-progress-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #cbd5e1;
+}
+
+.gm-progress-dot-done {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  border-color: #059669;
+}
+
+.game-mode-kids .gm-exercise.card {
+  background: #fffef7;
+  border: 3px solid #fde68a !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 28px rgba(251, 191, 36, 0.15);
+}
+
+.gm-puzzle-board {
+  border-radius: 20px !important;
+  border: 3px solid #e9d5ff !important;
+}
+
+.gm-pill {
+  background: #ede9fe;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5b21b6;
+}
+
+.gm-puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.gm-puzzle-cell {
+  aspect-ratio: 1;
+  min-height: 56px;
+  border-radius: 16px;
+  border: 3px solid #e2e8f0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.gm-puzzle-cell-earned {
+  background: linear-gradient(145deg, #fef08a 0%, #fbbf24 100%);
+  border-color: #f59e0b;
+  font-size: 1.4rem;
+}
+
+.gm-puzzle-daynum {
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.gm-feedback {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #ecfdf5;
+  border: 3px solid #6ee7b7;
+  font-size: 1.05rem;
+  color: #064e3b;
+}
+
+.gm-feedback-muted {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #78350f;
+}
+
+.gm-piece-earned {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.gm-hint {
+  color: #475569;
+}
+
+/* Reveal puzzle — SVG picture mosaic */
+.gm-puzzle-figure {
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.gm-puzzle-svg {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 12px auto 0;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
+  background: #e2e8f0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gm-puzzle-piece-earned {
+    animation: gm-piece-pop 0.45s ease-out;
+  }
+}
+
+@keyframes gm-piece-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.gm-puzzle-caption {
+  margin: 12px auto 0;
+  max-width: 720px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #475569;
+  text-align: center;
+}
+
+/* High-contrast hook (toggle by adding class on <body>). */
+body.contrast-high {
+  --color-text: #0b0c0f;
+  --color-text-secondary: #0b0c0f;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-divider: #0b0c0f;
+  --color-primary: #0b0c0f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
   }
 }

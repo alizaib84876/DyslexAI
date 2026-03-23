@@ -19,7 +19,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string, redirectTo?: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, redirectTo?: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role?: string, redirectTo?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -42,12 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const user = await fetchMe();
+      const fullUser: AuthUser = { id: user.id, name: user.name, email: user.email, role: user.role, student_id: user.student_id, created_at: user.created_at };
       setState({
-        user: { id: user.id, name: user.name, email: user.email, created_at: user.created_at },
+        user: fullUser,
         loading: false,
         authenticated: true
       });
-      setUser({ id: user.id, name: user.name, email: user.email, created_at: user.created_at });
+      setUser(fullUser);
     } catch {
       clearToken();
       setState({ user: null, loading: false, authenticated: false });
@@ -94,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signup = useCallback(
-    async (name: string, email: string, password: string, redirectTo?: string) => {
-      const res = await apiSignup({ name, email, password });
+    async (name: string, email: string, password: string, role?: string, redirectTo?: string) => {
+      const res = await apiSignup({ name, email, password, role: role || "student" });
       setToken(res.access_token);
       setUser(res.user);
       setState({

@@ -45,11 +45,11 @@ def list_exercises(
 
 
 def get_weak_words(db, student_id) -> set:
-    """Return words where mastery score is below 0.6."""
+    """Return words where mastery score is below 0.5."""
     sid = str(student_id)
     weak = db.query(WordMastery).filter(
         WordMastery.student_id == sid,
-        WordMastery.mastery_score < 0.6
+        WordMastery.mastery_score < 0.5
     ).all()
     return {wm.word.lower() for wm in weak}
 
@@ -141,6 +141,23 @@ def get_next_exercise(
     all_at_level   = base_query.all()
     fresh_at_level = [e for e in all_at_level if e.id not in recent_ids]
 
+    # Foundation mode for the first few sessions:
+    # pick exercises that target common dyslexic confusions so the child starts strong.
+    chosen = None
+    if student.total_sessions < 2 and level == 1:
+        confusable = ["b", "d", "p", "q", "m", "n", "f", "t", "r", "l"]
+
+        def looks_confusable(ex: Exercise) -> bool:
+            text = f"{ex.expected or ''} " + " ".join(ex.target_words or [])
+            t = text.lower()
+            return any(ch in t for ch in confusable)
+
+        foundation_pool = [e for e in fresh_at_level if looks_confusable(e)]
+        if foundation_pool:
+            chosen = random.choice(foundation_pool)
+        elif fresh_at_level:
+            chosen = random.choice(fresh_at_level)
+
     # ── Struggle pool — exercises containing weak words ───────────────
     struggle_pool = [
         e for e in fresh_at_level
@@ -204,23 +221,36 @@ def get_next_exercise(
     stretch_pool = stretch_query.all()
 
     # ── Weighted selection ─────────────────────────────────────────────
-    # If confused letters found and no explicit type requested:
-    #   50% struggle words, 20% letter tracing, 20% current level, 10% stretch
-    # Otherwise:
-    #   60% struggle words, 30% current level, 10% stretch
-    if letter_tracing_pool and not type:
-        chosen = weighted_choice([
-            (struggle_pool,       0.50),
-            (letter_tracing_pool, 0.20),
-            (level_pool,          0.20),
-            (stretch_pool,        0.10),
-        ])
-    else:
-        chosen = weighted_choice([
-            (struggle_pool, 0.60),
-            (level_pool,    0.30),
-            (stretch_pool,  0.10),
-        ])
+    # If there are any weak words, prioritize them heavily to avoid repeating
+    # already-mastered exercises.
+    if not chosen:
+        if struggle_pool:
+            if letter_tracing_pool and not type:
+                chosen = weighted_choice([
+                    (struggle_pool,       0.60),
+                    (letter_tracing_pool, 0.15),
+                    (level_pool,          0.15),
+                    (stretch_pool,        0.10),
+                ])
+            else:
+                chosen = weighted_choice([
+                    (struggle_pool, 0.65),
+                    (level_pool,    0.25),
+                    (stretch_pool,  0.10),
+                ])
+        else:
+            # No weak words left: allow level progression.
+            if letter_tracing_pool and not type:
+                chosen = weighted_choice([
+                    (letter_tracing_pool, 0.20),
+                    (level_pool,          0.65),
+                    (stretch_pool,        0.15),
+                ])
+            else:
+                chosen = weighted_choice([
+                    (level_pool,   0.70),
+                    (stretch_pool, 0.30),
+                ])
 
     # fallback — if all pools empty just return anything at level
     if not chosen:

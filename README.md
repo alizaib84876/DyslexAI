@@ -1,297 +1,160 @@
 # DyslexAI
 
-**Local-first OCR and adaptive exercises for dyslexic students.**
+Local-first OCR + adaptive literacy exercises for dyslexic learners.
 
-DyslexAI is a **web app** that combines a research-backed handwriting OCR pipeline with an adaptive exercise backend. It extracts difficult handwriting, corrects OCR noise, and delivers personalized typing, handwriting, and tracing exercises—all designed for dyslexic learners.
-
-**Status:** DEMO READY — suitable for FYP submission and portfolio.
-
-<p align="center">
-  <img src="docs/screenshots/04-dashboard.png" alt="DyslexAI Dashboard" width="900"/>
-</p>
-
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org)
+This repo contains:
+- **Frontend** (React + TypeScript + Vite)
+- **Backend** (FastAPI + SQLAlchemy) with:
+  - OCR Studio (DocTR + TrOCR + correction layers, optional Groq)
+  - Adaptive exercises (typing, handwriting, tracing)
+  - Teacher assignments (custom + optional LLM-generated)
+  - 90-day **Game Mode (Curriculum)** with streaks and puzzle pieces
 
 ---
 
-## Key Features
-
-| Feature | Description |
-|--------|-------------|
-| **Hybrid OCR** | DocTR detection + TrOCR recognition via NotebookPipeline (notebook_parity) |
-| **Correction pipeline** | Lexical cleanup → ByT5 context repair → optional Groq LLM |
-| **Adaptive exercises** | Word typing, sentence typing, handwriting, tracing |
-| **Student dashboard** | Track progress, history, and word mastery |
-| **Tracing canvas** | On-screen letter/word tracing with stroke capture |
-| **Offline-first** | Runs locally; no cloud dependency for OCR |
-
----
-
-## Screenshots
-
-### Landing & Auth
-
-![Landing](docs/screenshots/01-landing.png)
-*Landing page — Get Started and Log in*
-
-![Login](docs/screenshots/02-login.png)
-*Login page*
-
-![Signup](docs/screenshots/03-signup.png)
-*Sign up page*
-
-### Main App
-
-![Dashboard](docs/screenshots/04-dashboard.png)
-*Dashboard — metrics, chart, recent OCR history*
-
-![Workspace](docs/screenshots/05-workspace-upload.png)
-*Workspace — upload handwriting for OCR*
-
-![OCR UI](docs/screenshots/06-ocr-result.png)
-*OCR processing studio — raw/corrected text, correction layers*
-
-![History](docs/screenshots/07-history.png)
-*History — review and audit OCR runs*
-
-### Exercises & Management
-
-![Exercises](docs/screenshots/08-exercises.png)
-*Exercises — typing, handwriting, tracing*
-
-![Game Mode](docs/screenshots/09-game-mode.png)
-*Game mode — gamified exercises*
-
-![Students](docs/screenshots/10-students.png)
-*Students — manage learners*
-
-![Settings](docs/screenshots/11-settings.png)
-*Settings — user preferences*
+## Features
+- **OCR Studio**
+  - `/api/ocr/process` runs DocTR line detection, TrOCR recognition, and correction layers.
+  - Returns raw OCR text, corrected text, confidence, and image references for the UI.
+- **Adaptive Exercises**
+  - `/api/exercises/next` chooses exercises using word mastery + confused-letter signals.
+  - `/api/sessions/*/submit-*` scores attempts and updates mastery + difficulty.
+- **Game Mode (Curriculum)**
+  - Auto-loads the 90-day curriculum from `seed_data_90_days.html`.
+  - Enforces “one new day per calendar day” logic based on recorded completions.
+  - Puzzle pieces unlock by day completion.
+- **Tracing Canvas Scoring**
+  - Captures strokes and computes a numeric trace score on the frontend.
+- **Teacher Assignments**
+  - Teachers can create assignments manually or generate them with Groq (LLM).
 
 ---
 
-*To recapture: run the app (`.\scripts\run-simple.ps1`), then `cd frontend && npm run screenshots`*
+## Repo Layout
+- `frontend/` — React app (routes like `/dashboard`, `/exercises`, `/ocr-studio`, `/game`)
+- `dyslexia-backend/` — FastAPI app (routers under `app/routers/`)
+- `seed_data_90_days.html` — Game Mode curriculum data (required)
 
 ---
 
-## Tech Stack
+## Setup (Local)
 
-- **Frontend:** React 18, Vite, TypeScript
-- **Backend:** FastAPI, SQLAlchemy, Uvicorn
-- **OCR:** DocTR (line detection) + TrOCR (recognition) + ByT5 (correction)
-- **Database:** SQLite (default) or PostgreSQL
-
----
-
-## Architecture Summary
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Frontend (React + Vite) — port 5173                             │
-│  Dashboard | Exercises | Workspace | Students | History | Game   │
-└───────────────────────┬─────────────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  dyslexia-backend (FastAPI) — port 8000                          │
-│  OCR | Auth | Dashboard | Exercises | Sessions                  │
-│  DocTR + TrOCR + ByT5 | Groq LLM (optional)                      │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-- **Active backend:** `dyslexia-backend/` (single unified API)
-- **Active frontend:** `frontend/`
-- **Active OCR path:** `POST /api/ocr/process` → NotebookPipeline → NotebookOCREngine → notebook layers
-- **Default OCR mode:** `notebook_parity` (verified on 6 golden samples)
-
----
-
-## Repository Structure
-
-```
-dyslexai-/
-├── dyslexia-backend/     # Single backend: OCR + auth + exercises (port 8000)
-├── frontend/              # React SPA
-├── scripts/
-│   ├── setup.ps1          # One-time setup
-│   ├── run.ps1            # Full stack (PostgreSQL)
-│   └── run-simple.ps1     # Simple mode (SQLite, no Docker)
-├── docs/                  # Architecture, getting started, troubleshooting
-├── tests/
-└── README.md
-```
-
----
-
-## Quick Start (Fastest Path)
-
-**Prerequisites:** Python 3.9+, Node.js 18+, Git
-
+### 1) Backend
 ```bash
-# 1. Clone
-git clone https://github.com/abubakarshahid16/dyslexai-.git
-cd dyslexai-
+cd "/Users/alizaib/Desktop/dyslexai-/dyslexia-backend"
+python3 -m venv .venv
+source .venv/bin/activate
 
-# 2. Setup (one-time)
-.\scripts\setup.ps1
-
-# 3. Run (no Docker? use run-simple.ps1 or start-demo.ps1)
-.\scripts\run-simple.ps1
+# Install dependencies (adjust as needed for your environment)
+pip install -r requirements.txt 2>/dev/null || true
+pip install fastapi uvicorn sqlalchemy psycopg2-binary alembic \
+  python-dotenv python-Levenshtein pytest httpx pydantic groq \
+  transformers torch Pillow python-multipart doctr opencv-python
 ```
 
-Then open **http://localhost:5173** — sign up, log in, and start using the app.
+Create `dyslexia-backend/.env`:
+```env
+DATABASE_URL=sqlite:///./dyslexia.db
+GROQ_API_KEY=your_groq_api_key_here
+JWT_SECRET=dev-secret-change-in-production
+OCR_MODE=notebook_parity
+QUALITY_MODE=hard
+```
 
----
-
-## Full Setup
-
-### 1. Clone
-
+Seed exercises:
 ```bash
-git clone https://github.com/abubakarshahid16/dyslexai-.git
-cd dyslexai-
+python db/seed.py
 ```
 
-### 2. One-Time Setup
-
-```powershell
-.\scripts\setup.ps1
-```
-
-This will:
-- Start PostgreSQL (Docker) — or use SQLite if Docker unavailable
-- Create Python venv in `dyslexia-backend`
-- Install backend & frontend dependencies
-- Seed exercises
-- Create `.env` from `.env.example`
-
-**If Docker fails:** Set `DATABASE_URL=sqlite:///./dyslexia.db` in `dyslexia-backend/.env`, then run `cd dyslexia-backend; .\venv\Scripts\python.exe db/seed.py`
-
-### 3. Run the App
-
-| Command | Use When |
-|---------|----------|
-| `.\scripts\run-simple.ps1` | **Recommended** — No Docker, SQLite, all features work |
-| `.\start-demo.ps1` | Same as run-simple.ps1 (convenience wrapper) |
-| `.\scripts\run.ps1` | Docker/PostgreSQL available |
-
-- **Backend:** http://localhost:8000
-- **Frontend:** http://localhost:5173
-
----
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | DB connection | `sqlite:///./dyslexia.db` (run-simple) |
-| `GROQ_API_KEY` | Groq API key for LLM feedback | Optional |
-| `JWT_SECRET` | JWT signing secret | `change-this-in-production` |
-| `OCR_MODE` | `notebook_parity` (verified) or `production` | `notebook_parity` |
-| `VITE_API_BASE_URL` | API base for frontend | `http://localhost:8000/api` |
-| `VITE_EXERCISES_API` | Exercise backend URL | `http://localhost:8000` |
-
----
-
-## Demo User / Auth Notes
-
-- **No pre-seeded users** — create an account at `/signup`
-- **Any email/password** (min 6 chars) works
-- Token persists in `localStorage`; refresh keeps session
-- See [DEMO_FLOW.md](DEMO_FLOW.md) for a step-by-step walkthrough
-
----
-
-## OCR Pipeline Explanation
-
-**Active path:** `/api/ocr/process` → `NotebookPipeline` → `NotebookOCREngine` (DocTR + TrOCR) → layer_1_sanitize → layer_2_dyslexia_fix → Groq (optional)
-
-**Default mode:** `notebook_parity` — locked, matches research notebook outputs. Verified on 6 golden samples.
-
-**First run:** Models download on first OCR upload; expect 30–90 seconds. Subsequent runs are faster.
-
----
-
-## Frontend Pages / Features
-
-| Page | Route | Description |
-|------|-------|-------------|
-| Landing | `/` | Welcome; sign up / log in |
-| Dashboard | `/dashboard` | Metrics, chart, recent OCR history |
-| Workspace | `/workspace` | Upload image, OCR, raw/corrected/layers view |
-| History | `/history` | OCR runs; approve/edit/reject |
-| Exercises | `/exercises` | Student picker, typing/handwriting/tracing |
-| Game Mode | `/game` | Gamified exercise flow |
-| Students | `/students` | Manage students |
-| Settings | `/settings` | User preferences |
-
-See [docs/FEATURES.md](docs/FEATURES.md) for full list.
-
----
-
-## Testing / Verification
-
+Start server:
 ```bash
-cd dyslexia-backend
-
-# OCR regression (notebook_parity lock-in, 6 golden samples)
-python scripts/ocr_regression.py --report FINAL_OCR_REGRESSION_REPORT.json
-
-# Auth proof (18 tests)
-python scripts/auth_proof.py
-
-# Unit tests
-pytest
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
----
+### 2) Frontend
+```bash
+cd "/Users/alizaib/Desktop/dyslexai-/frontend"
+npm install
+npm run dev -- --host 127.0.0.1 --port 5173
+```
 
-## Known Limitations
-
-1. **Students shared** — All users see the same student pool
-2. **Cloud refinement** — Planned; not implemented
-3. **OCR latency** — 30–180 sec per image
-4. **Single backend** — No horizontal scaling
-
----
-
-## Submission / Demo Status
-
-| Item | Status |
-|------|--------|
-| OCR notebook_parity | ✓ Locked, 6/6 regression pass |
-| Auth | ✓ Enforced, 18/18 auth proof pass |
-| Frontend | ✓ Complete |
-| Demo flow | ✓ Documented |
-| **Verdict** | **DEMO READY** |
-
-See [SUBMISSION_MANIFEST.md](SUBMISSION_MANIFEST.md), [RELEASE_READINESS_REPORT.md](RELEASE_READINESS_REPORT.md), [FINAL_EVALUATION.md](FINAL_EVALUATION.md), [FINAL_DEMO_PROOF.md](FINAL_DEMO_PROOF.md).
+Open:
+- http://127.0.0.1:5173
 
 ---
 
-## Documentation
+## Environment Variables (Summary)
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architecture overview
-- [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — Step-by-step setup
-- [docs/RUN_MODES.md](docs/RUN_MODES.md) — run.ps1 vs run-simple.ps1
-- [docs/OCR_PIPELINE.md](docs/OCR_PIPELINE.md) — OCR pipeline details
-- [docs/FEATURES.md](docs/FEATURES.md) — User-facing pages
-- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Common issues
-- [docs/FINAL_STATUS.md](docs/FINAL_STATUS.md) — What's complete, what's not
+Backend (`dyslexia-backend/.env`)
+- `DATABASE_URL`
+- `GROQ_API_KEY` (optional but needed for LLM feedback/exercise generation)
+- `JWT_SECRET`
+- `OCR_MODE` (`notebook_parity` recommended for parity with the research notebook)
+- `QUALITY_MODE`
 
----
-
-## License
-
-MIT
+Frontend (`frontend/.env` if you use it)
+- `VITE_API_BASE_URL` (defaults to `http://localhost:8000/api`)
 
 ---
 
-## Acknowledgments
+## Frontend Modules
 
-- [TrOCR](https://huggingface.co/microsoft/trocr-large-handwritten) for handwriting recognition
-- [DocTR](https://github.com/mindee/doctr) for line detection
-- [ByT5](https://huggingface.co/google/byt5-small) for byte-level correction
-- [dyslexia-backend](https://github.com/alizaib84876/dyslexia-backend) for adaptive exercise logic
+Main routes (see `frontend/src/App.tsx`):
+- `/` — `LandingPage`
+- `/login`, `/signup` — auth
+- `/dashboard` — `DashboardPage`
+- `/exercises` — `ExercisesPage` (typing/handwriting/tracing)
+- `/ocr-studio` — student OCR studio (`StudentOcrStudioPage`)
+- `/workspace` — teacher OCR studio (`WorkspacePage`)
+- `/assignments` — assignments (`AssignmentsPage`)
+- `/game` — Game Mode (`GameHomePage`, `GameSessionPage`, `GameCompletePage`, `GamePuzzlePage`)
+
+Key components:
+- `frontend/src/components/TracingCanvas.tsx` — stroke capture + trace scoring
+- `frontend/src/components/OcrHistoryPanel.tsx` — OCR run history
+
+---
+
+## Backend Modules
+
+Routers under `dyslexia-backend/app/routers/`:
+- `auth.py`
+  - `/api/auth/signup`, `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`
+- `students.py`
+  - `/api/students/*` (student profiles and stats)
+- `exercises.py`
+  - `GET /api/exercises/next` (adaptive exercise selection)
+  - `POST /api/exercises/generate` (LLM generation for weak words)
+- `sessions.py`
+  - `POST /api/sessions/` (create a session)
+  - `POST /api/sessions/{id}/submit` (typing)
+  - `POST /api/sessions/{id}/submit-handwriting` (TrOCR-only handwriting exercise OCR)
+  - `POST /api/sessions/{id}/submit-tracing` (trace scoring, frontend-computed)
+- `ocr.py`
+  - `POST /api/ocr/process` (full OCR Studio pipeline)
+- `game.py`
+  - `GET /api/game/today` (what to play today)
+  - `POST /api/game/complete-day` (complete day)
+  - `GET /api/game/puzzle/{phase}` (puzzle pieces by phase)
+- `assignments.py`
+  - teacher assignment creation + listing
+
+---
+
+## Game Mode (Curriculum)
+
+Data:
+- Uses `seed_data_90_days.html` to populate `game_days` / `game_exercises`.
+
+Play flow:
+1. `GET /api/game/today` → day number + exercises
+2. Student completes exercises and calls `POST /api/game/complete-day`
+3. `GET /api/game/puzzle/{phase}` to view unlocked pieces
+
+---
+
+## Notes
+- The first OCR / handwriting run can take a while because models download and load.
+- LLM features require `GROQ_API_KEY`.
+- Remove your `.env` files before publishing.
+

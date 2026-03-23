@@ -7,7 +7,7 @@ export function LandingPage() {
         <div className="landing-logo">📖</div>
         <h1>DyslexAI</h1>
         <p className="landing-tagline">
-          Assistive OCR and learning exercises for dyslexia-friendly reading and writing.
+          Dyslexia Learning Assistant.
         </p>
         <div className="landing-actions">
           <Link to="/signup" className="primary-button landing-cta">

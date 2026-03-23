@@ -10,6 +10,7 @@ import {
   submitTyping
 } from "../lib/api";
 import type { Exercise, ExerciseStudent } from "../types";
+import { useAuth } from "../contexts/AuthContext";
 
 // ─── XP / Level helpers ───────────────────────────────────────────────────────
 const XP_PER_LEVEL = 500;
@@ -25,6 +26,9 @@ function starsForScore(score: number) {
 type Phase = "pick" | "playing" | "result";
 
 export function GamifiedExercisePage() {
+  const { user } = useAuth();
+  const isStudent = user?.role === "student";
+
   const [students, setStudents] = useState<ExerciseStudent[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [newName, setNewName] = useState("");
@@ -48,15 +52,28 @@ export function GamifiedExercisePage() {
   const confettiRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchExerciseStudents()
-      .then((list) => {
-        setStudents(list);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not load students");
-      });
-  }, []);
+    if (isStudent && user?.student_id) {
+      setSelectedId(user.student_id);
+    } else {
+      fetchExerciseStudents()
+        .then((list) => {
+          setStudents(list);
+          setError(null);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Could not load students");
+        });
+    }
+  }, [isStudent, user?.student_id]);
+
+  // If logged in as student, skip the "picker" framing and go straight to practice.
+  useEffect(() => {
+    if (!isStudent) return;
+    if (!selectedId) return;
+    if (phase !== "pick") return;
+    void fetchExercise();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStudent, selectedId]);
 
   // Trigger confetti on perfect score or level up
   useEffect(() => {
@@ -115,6 +132,28 @@ export function GamifiedExercisePage() {
       setPhase("playing");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to get exercise");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function tryAgainExercise() {
+    if (!exercise) return;
+    setError(null);
+    setBusy(true);
+    setTypingAns("");
+    setHandwritingFile(null);
+    try {
+      // Same exercise, new session
+      const sess = await createSession({
+        student_id: selectedId,
+        exercise_id: exercise.id,
+        is_handwriting: exercise.type === "handwriting"
+      });
+      setSessionId(sess.session_id);
+      setPhase("playing");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to restart exercise");
     } finally {
       setBusy(false);
     }
@@ -235,38 +274,46 @@ export function GamifiedExercisePage() {
         {/* ── Student picker ── */}
         {phase === "pick" && (
           <div className="gx-card gx-card-pick">
-            <h2 className="gx-card-title">Select Your Player</h2>
-            <p className="gx-hint">Choose an existing student profile or create a new one to begin.</p>
-            <div className="gx-form-row">
-              <select
-                className="gx-select"
-                value={selectedId}
-                onChange={e => setSelectedId(e.target.value)}
-              >
-                <option value="">Choose Student Profile…</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} (Lvl {s.difficulty_level})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="gx-form-row">
-              <input
-                className="gx-input"
-                placeholder="Enter new student name…"
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleAddStudent()}
-              />
-              <button className="gx-btn gx-btn-secondary" onClick={handleAddStudent} disabled={busy || !newName.trim()}>
-                Add New
-              </button>
-            </div>
+            <h2 className="gx-card-title">{isStudent ? "Ready to Practice" : "Select Student"}</h2>
+            {isStudent ? (
+              <p className="gx-hint">
+                Logged in as <strong>{user?.name}</strong>. Starting practice…
+              </p>
+            ) : (
+              <>
+                <p className="gx-hint">Choose an existing student profile or create a new one to begin.</p>
+                <div className="gx-form-row">
+                  <select
+                    className="gx-select"
+                    value={selectedId}
+                    onChange={e => setSelectedId(e.target.value)}
+                  >
+                    <option value="">Choose Student Profile…</option>
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (Lvl {s.difficulty_level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="gx-form-row">
+                  <input
+                    className="gx-input"
+                    placeholder="Enter new student name…"
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleAddStudent()}
+                  />
+                  <button className="gx-btn gx-btn-secondary" onClick={handleAddStudent} disabled={busy || !newName.trim()}>
+                    Add New
+                  </button>
+                </div>
+              </>
+            )}
             <button
               className="gx-btn gx-btn-start"
               onClick={handleStart}
-              disabled={busy || !selectedId}
+              disabled={busy || !selectedId || isStudent}
             >
               {busy ? "Loading Studio…" : "Start Practice Session"}
             </button>
@@ -362,6 +409,9 @@ export function GamifiedExercisePage() {
             </div>
             <button className="gx-btn gx-btn-next" onClick={fetchExercise} disabled={busy}>
               {busy ? "Fetching Next..." : "Next Challenge →"}
+            </button>
+            <button className="gx-btn gx-btn-secondary" onClick={tryAgainExercise} disabled={busy}>
+              🔁 Try Again
             </button>
             <button className="gx-btn gx-btn-ghost" onClick={() => setPhase("pick")}>
               Return to Selection

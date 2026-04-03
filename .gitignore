@@ -1,0 +1,30 @@
+# Dependencies & build artifacts
+node_modules/
+dist/
+build/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Logs & local databases
+*.log
+*.db
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+
+# Runtime-generated OCR / uploads (keep source in repo; ignore local blobs)
+dyslexia-backend/data/artifacts/
+dyslexia-backend/data/uploads/
+dyslexia-backend/data/model_cache/
